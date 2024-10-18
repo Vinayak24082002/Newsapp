@@ -67,6 +67,7 @@
       list-style-type: none;
       display: flex;
       gap: 15px;
+      margin-left: 0;
     }
 
     .filters li select {
@@ -96,8 +97,6 @@
       display: flex;
       flex-direction: column;
     }
-
-   
 
     .source {
       font-size: 14px;
@@ -151,6 +150,10 @@
       header h1 {
         font-size: 1.2rem;
       }
+
+      .filters {
+        margin-left: 5px;
+      }
     }
 
     @media (max-width: 768px) {
@@ -158,12 +161,19 @@
         width: calc(100% - 20px);
       }
 
-      .filters {
-        display: none;
-      }
-
       header h1 {
         font-size: 1rem;
+      }
+
+      .filters {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .filters li select {
+        width: 100%;
       }
     }
   </style>
@@ -181,9 +191,8 @@
           <select id="sort-filter">
             <option value="all">All News</option>
             <option value="publishedAt">Latest</option>
-        </select>
+          </select>
         </li>
-        
       </ul>
     </header>
 
