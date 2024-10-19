@@ -2740,7 +2740,7 @@ const countries = [
     },
   ];
 
-  const languages = [
+ const languages = [
     {
       code: "aa",
       language: "Afar",
@@ -3481,7 +3481,7 @@ const countries = [
   ];
 
 
-
+    
 //fetch("https://newsapi.org/v2/everything?q=bitcoin&apiKey=72aaa2e134424bfca9c8b2406f8f3289")
 //.then((res) => res.json())
 // .then(data => {
@@ -3489,109 +3489,135 @@ const countries = [
 //loadNews(allArticles);
 // });
 
+let lang = 'en'; 
+let preference = 'publishedAt'; 
+let searchdata = 'india';
+let allArticles = [];
+let oriArticle = [];
+
 const newsContainer = document.getElementById("news-container");
 const searchForm = document.getElementById("search-form");
 const searchInput = document.getElementById("search-news");
 const searchIcon = document.getElementById("search-icon");
-let allArticles = news;
+
+function fetchNews(searchdata,lang,preference) {
+    fetch(`https://newsapi.org/v2/everything?q=${searchdata}&apiKey=72aaa2e134424bfca9c8b2406f8f3289&language=${lang}&sortBy=${preference}`)
+        .then((res) => res.json())
+        .then(data => {
+            allArticles = data.articles;
+            oriArticle = allArticles; 
+            loadNews(allArticles); 
+        })
+        .catch(error => {
+            console.error("Error fetching news:", error);
+        });
+}
+
+const languageFilter = document.getElementById("language-filter");
+languageFilter.addEventListener("change", function() {
+    lang = this.value; 
+    fetchNews(searchdata,lang,preference); 
+});
+
+const sortFilter = document.getElementById("sort-filter");
+sortFilter.addEventListener("change", function() {
+    preference = this.value; 
+    fetchNews(searchdata,lang,preference);
+});
 
 function showNews(data) {
-  newsContainer.innerHTML = "";
+    newsContainer.innerHTML = "";
+    data.forEach((news) => {
+        if (!news.urlToImage || !news.title || !news.description) {
+            return;
+        }
+        const newCard = document.createElement("div");
+        const source = document.createElement("span");
+        const image = document.createElement("img");
+        const title = document.createElement("h2");
+        const author = document.createElement("span");
+        const published = document.createElement("p");
 
-  data.forEach((news) => {
-    if (!news.urlToImage || !news.title || !news.description) {
-      return;
-    }
+        source.classList.add("source");
+        source.innerText = news.source.name;
 
-    const newCard = document.createElement("div");
-    const source = document.createElement("span");
-    const image = document.createElement("img");
-    const title = document.createElement("h2");
-    const author = document.createElement("span");
-    const published = document.createElement("p");
+        image.classList.add("image");
+        image.src = news.urlToImage;
+        image.alt = news.title;
 
-    source.classList.add("source");
-    source.innerText = news.source.name;
+        title.classList.add("title");
+        title.innerText = news.title;
 
-    image.classList.add("image");
-    image.src = news.urlToImage;
-    image.alt = news.title;
+        author.classList.add("author", "published");
+        author.innerText = `${news.author || "Unknown Author"} | ${new Date(news.publishedAt).toLocaleDateString()}`;
 
-    title.classList.add("title");
-    title.innerText = news.title;
+        published.classList.add("description");
+        published.innerText = news.description;
 
-    author.classList.add("author", "published");
-    author.innerText = `${news.author || "Unknown Author"} | ${new Date(
-      news.publishedAt
-    ).toLocaleDateString()}`;
+        newCard.appendChild(source);
+        newCard.appendChild(image);
+        newCard.appendChild(title);
+        newCard.appendChild(author);
+        newCard.appendChild(published);
 
-    published.classList.add("description");
-    published.innerText = news.description;
-
-    newCard.appendChild(source);
-    newCard.appendChild(image);
-    newCard.appendChild(title);
-    newCard.appendChild(author);
-    newCard.appendChild(published);
-
-    newsContainer.appendChild(newCard);
-  });
+        newsContainer.appendChild(newCard);
+    });
 }
 
 function loadNews(data) {
-  showNews(data);
+    if (Array.isArray(data) && data.length > 0) {
+        showNews(data);
+    } else {
+        newsContainer.innerHTML = `<p>No news articles to display.</p>`;
+    }
 }
 
 function performSearch() {
-  const query = searchInput.value.toLowerCase().trim();
-
-  if (query === "") {
-    loadNews(allArticles);
-  } else {
-    const filteredArticles = allArticles.filter((news) => {
-      return (
-        news.title.toLowerCase().includes(query) ||
-        (news.author && news.author.toLowerCase().includes(query))
-      );
-    });
-
-    loadNews(filteredArticles);
-  }
+    const query = searchInput.value.toLowerCase().trim();
+    if (query === "") {
+        alert("Type something to search");
+        return;  
+    } else {
+        fetchNews(query,lang,preference);
+    }
 }
 
 searchIcon.addEventListener("click", function () {
-  performSearch();
+    performSearch();
 });
 
-searchInput.addEventListener("keypress", function (e) {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    performSearch();
-  }
+searchForm.addEventListener("submit", function (e) {
+    e.preventDefault(); 
+    performSearch();     
 });
+
+// 
+// searchInput.addEventListener("keypress", function (e) {
+//     if (e.key === "Enter") {
+//         e.preventDefault();
+//         performSearch();
+//     }
+// });
+
+function handleSort() {
+    let sortedArticles;
+    if (preference === "publishedAt") {
+        sortedArticles = [...oriArticle].sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+    } else if (preference === "relevance") {
+        sortedArticles = [...oriArticle].sort((a, b) => b.title.length - a.title.length);
+    } else if (preference === "popularity") {
+        sortedArticles = [...oriArticle].sort((a, b) => (b.source?.name.length || 0) - (a.source?.name.length || 0));
+    } 
+
+    loadNews(sortedArticles);
+}
+
+// Initial fetch
+fetchNews(searchdata,lang,preference)
 
 function getRandomColor() {
-  const randomIndex = Math.floor(Math.random() * subtleColors.length);
-  return subtleColors[randomIndex].color;
+    const randomIndex = Math.floor(Math.random() * subtleColors.length);
+    return subtleColors[randomIndex].color;
 }
+
 document.body.style.backgroundColor = getRandomColor();
-loadNews(allArticles);
-  let oriArticle=[...allArticles];
-function handleSort() {
-    const selectedSort = document.getElementById("sort-filter").value;
-
-    if (selectedSort === "publishedAt") {
-       
-        const sortedArticles = allArticles.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-        loadNews(sortedArticles); 
-    } else if(selectedSort === "all"){
-        loadNews(oriArticle);
-    } 
-}
-
-
-const sortFilter = document.getElementById("sort-filter");
-sortFilter.addEventListener("change", handleSort);
-
-
-loadNews(allArticles);
